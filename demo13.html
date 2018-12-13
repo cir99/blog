@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>改进</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+    
+    .sqr {
+      display: none;
+      position: absolute;
+      box-sizing: border-box;
+      width: 50px;
+      height: 50px;
+      line-height: 50px;
+      border: 1px solid black;
+      background: yellow;
+      font-size: 24px;
+      text-align: center;
+    }
+
+    .button-wrapper {
+      position: relative;
+      margin-top: 360px;
+      width: 100vw;
+      height: 50px;
+      border: 1px solid black;
+      border-bottom: none;
+    }
+    
+    .btn-wrapper {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 0 20px 0 20px;
+    }
+
+    .btn {
+      display: inline-block;
+      height: 36px;
+      width: 100px;
+      border-radius: 6px;
+      color: snow;
+      background-color: #0084ff;
+      cursor: pointer;
+      border: none;
+    }
+
+    #btn2, #btn3 {
+      margin-left: 50px;
+    }
+  </style>
+</head>
+<body>
+  <div class="sqr-wrapper">
+    <div class="sqr" id="sqr1">1</div>
+    <div class="sqr" id="sqr2">2</div>
+    <div class="sqr" id="sqr3">3</div>
+  </div>
+  <div class="button-wrapper">
+    <div class="btn-wrapper">
+      <button class="btn" id="btn1">单个方块</button>
+      <button class="btn" id="btn2">两个方块</button>
+      <button class="btn" id="btn3">碰撞检测</button>
+    </div>
+  </div>
+  <script>
+    const myApp = {
+      req: undefined,
+      sqrs: document.querySelector('.sqr-wrapper'),
+      sqr1: document.querySelector('#sqr1'),
+      sqr2: document.querySelector('#sqr2'),
+      sqr3: document.querySelector('#sqr3'),
+      btn1: document.querySelector('#btn1'),
+      btn2: document.querySelector('#btn2'),
+      btn3: document.querySelector('#btn3'),
+      opt1: {x: 0, y: 300, speed: 5},
+      opt2: {x: 300, y: 300, speed: 10},
+      opt3: {x: 600, y: 300, speed: 5},
+      Createmove: function (ele, options) {
+        const innerWidth = window.innerWidth
+        let move = new Object()
+        move = {
+          x: options.x,
+          y: options.y,
+          speed: options.speed,
+          minX : options.x,
+          maxX: options.x + ele.offsetWidth,
+          start: function () {
+            let temp = move.x
+            ele.style.top = move.y + 'px'
+
+            move.id = setTimeout(function () {
+              temp >= innerWidth ? temp = 0 : temp += move.speed
+              ele.style.left = temp + 'px'
+              move.minX = ele.offsetLeft
+              move.maxX = move.minX + ele.offsetWidth
+              ele.style.display = 'block'
+              move.id = setTimeout(arguments.callee, 50)
+            }, 50)
+          },
+          stop: function () {
+            clearTimeout(move.id)
+          }
+        }
+        return move
+      },
+      isHit: function () {
+        let minXarr = [],
+          maxXarr = []
+
+        for (let e in moveObj) {
+          minXarr.push(moveObj[e].minX)
+          maxXarr.push(moveObj[e].maxX)
+        }
+
+        for (let i = 0, len = minXarr.length; i < len; i++) {
+          for (let j = 0; j < len; j++) {
+            if (minXarr[i] === maxXarr[j] ) {
+              let tempSpeed = moveObj[j].speed
+              moveObj[j].speed = moveObj[i].speed
+              moveObj[i].speed = tempSpeed
+            }
+          }
+        }
+        myApp.req = requestAnimationFrame(myApp.isHit)
+      },
+      cancelReq: function () {
+        window.cancelAnimationFrame(myApp.req)
+        myApp.req = undefined
+      },
+      forbid: function () {
+        this.disabled = true
+        this.style.cssText = 'background: grey; cusor = "not-allowed"'
+      },
+      reuse: function () {
+        this.disabled = false
+        this.style.cssText = 'background: #0084ff; cusor = "pointer"'
+      },
+      addSqr: function (sqr, sqrNum) {
+        if (!myApp.sqrs.contains(sqr)) {
+          myApp.sqrs.appendChild(sqr)
+        } else {
+          moveObj[sqrNum - 1].stop()
+        }
+      },
+      removeSqr: function (sqr, sqrNum) {
+        if (myApp.sqrs.contains(sqr)) {
+          moveObj[sqrNum - 1].stop()
+          myApp.sqrs.removeChild(sqr)
+        }
+      }
+    }
+
+    myApp.event1 = function () {
+      if (myApp.req) myApp.cancelReq()
+
+      myApp.addSqr(myApp.sqr1, 1)
+      myApp.removeSqr(myApp.sqr2, 2)
+      myApp.removeSqr(myApp.sqr3, 3)
+
+      move1.speed = myApp.opt1.speed
+      move1.start()
+
+      myApp.forbid.call(myApp.btn1)
+      myApp.reuse.call(myApp.btn2)
+      myApp.reuse.call(myApp.btn3)
+    } 
+
+    myApp.event2 = function () {
+      if (myApp.req) myApp.cancelReq()
+
+      myApp.removeSqr(myApp.sqr1, 1)
+      myApp.addSqr(myApp.sqr2, 2)
+      myApp.addSqr(myApp.sqr3, 3)
+
+      move2.speed = myApp.opt2.speed
+      move3.speed = myApp.opt3.speed
+
+      move2.start()
+      move3.start()
+
+      myApp.forbid.call(myApp.btn2)
+      myApp.reuse.call(myApp.btn1)
+      myApp.reuse.call(myApp.btn3)
+    } 
+    
+    myApp.event3 = function () {
+      
+      myApp.addSqr(myApp.sqr1, 1)
+      myApp.addSqr(myApp.sqr2, 2)
+      myApp.addSqr(myApp.sqr3, 3)
+     
+      myApp.isHit()
+
+      move1.start()
+      move2.start()
+      move3.start()
+      
+      myApp.forbid.call(myApp.btn3)
+      myApp.reuse.call(myApp.btn1)
+      myApp.reuse.call(myApp.btn2)
+    }
+
+    const move1 = myApp.Createmove(myApp.sqr1, myApp.opt1)
+    const move2 = myApp.Createmove(myApp.sqr2, myApp.opt2)
+    const move3 = myApp.Createmove(myApp.sqr3, myApp.opt3)
+    
+    const moveObj = {0: move1, 1: move2, 2: move3}
+
+    window.onload = function () {
+      myApp.btn1.addEventListener('click', myApp.event1)
+      myApp.btn2.addEventListener('click', myApp.event2)
+      myApp.btn3.addEventListener('click', myApp.event3)
+    }
+
+  </script>
+</body>
+</html>
